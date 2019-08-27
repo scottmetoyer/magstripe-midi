@@ -2,10 +2,12 @@ const midi = require('midi');
 const readline = require('readline');
 
 const output = new midi.Output();
+var currentStep = 1;
+var maxSteps = 4;
 
 var portCount = output.getPortCount();
 const waitFor = (ms) => new Promise(r => setTimeout(r, ms));
-var notes = [];
+var notes = [10, 20, 30, 40];
 
 console.log("Available MIDI devices:");
 for (var i = 0; i < portCount; i++) {
@@ -49,11 +51,12 @@ input.on('line', (input) =>{
 });
 
 const start = async () => {
-  await asyncForEach([1, 2, 3], async (num) => {
+  await asyncLoop(notes, async (num) => {
     await waitFor(1000);
+
+    // Play note stored at the position in the array
     console.log(num);
   });
-  console.log('Done');
 }
 
 
@@ -64,10 +67,14 @@ const scale = (num, in_min, in_max, out_min, out_max) => {
   return (num - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array);
-  }
+async function asyncLoop(array, callback) {
+  do {
+    await callback(array[currentStep - 1], currentStep - 1, notes);
+    currentStep += 1;
+    if (currentStep > maxSteps) {
+      currentStep = 1;
+    }
+  } while (true);
 }
 
 start();
