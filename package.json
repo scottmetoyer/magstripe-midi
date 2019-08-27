@@ -1,0 +1,14 @@
+{
+  "name": "magstripe-midi",
+  "version": "1.0.0",
+  "description": "Magstripe data to MIDI sequencer",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Scott Metoyer",
+  "license": "ISC",
+  "dependencies": {
+    "midi": "^1.0.0"
+  }
+}
