@@ -2,12 +2,12 @@ const midi = require('midi');
 const readline = require('readline');
 
 const output = new midi.Output();
-var currentStep = 1;
-var maxSteps = 4;
-
 var portCount = output.getPortCount();
 const waitFor = (ms) => new Promise(r => setTimeout(r, ms));
+
 var notes = [10, 20, 30, 40];
+var currentStep = 1;
+var maxSteps = 4;
 
 console.log("Available MIDI devices:");
 for (var i = 0; i < portCount; i++) {
@@ -31,6 +31,7 @@ function notesOff(note1, note2) {
 
 input.on('line', (input) =>{
   console.log('Received: ' + input);
+  notes[currentStep] = input;
 
   // Parse the input into a set of notes
   // 144 is channel 1 out
