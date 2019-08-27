@@ -8,6 +8,8 @@ const waitFor = (ms) => new Promise(r => setTimeout(r, ms));
 var notes = [10, 20, 30, 40];
 var currentStep = 1;
 var maxSteps = 4;
+var stepDelay = 250;
+const midiEvent = 144;
 
 console.log("Available MIDI devices:");
 for (var i = 0; i < portCount; i++) {
@@ -15,19 +17,13 @@ for (var i = 0; i < portCount; i++) {
 }
 
 var deviceNumber = 2;
-// output.openPort(deviceNumber);
-
-// console.log('Opened ' + output.getPortName(deviceNumber) +  '. Waiting for input.');
+output.openPort(deviceNumber);
+console.log('Opened ' + output.getPortName(deviceNumber) +  '. Waiting for input.');
 
 const input = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
-
-function notesOff(note1, note2) {
-  output.sendMessage([144, note1, 0]);
-  output.sendMessage([145, note2, 0]);
-}
 
 input.on('line', (input) =>{
   console.log('Received: ' + input);
@@ -53,9 +49,19 @@ input.on('line', (input) =>{
 
 const start = async () => {
   await asyncLoop(notes, async (num) => {
-    await waitFor(1000);
+    await waitFor(stepDelay);
+
+    var previousStep = currentStep - 1;
+    if (previousStep < 0) {
+      previousStep = maxSteps - 1;
+    }
+
+    // Stop previous note
+    output.sendMessage([midiEvent, notes[previousStep], 0]);
 
     // Play note stored at the position in the array
+    output.sendMessage([midiEvent, notes[currentStep], num]);
+
     console.log(num);
   });
 }
