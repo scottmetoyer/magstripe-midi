@@ -5,7 +5,7 @@ const output = new midi.Output();
 var portCount = output.getPortCount();
 const waitFor = (ms) => new Promise(r => setTimeout(r, ms));
 
-var notes = [10, 20, 30, 40];
+var notes = [];
 var currentStep = 1;
 var maxSteps = 4;
 var stepDelay = 250;
@@ -16,8 +16,10 @@ for (var i = 0; i < portCount; i++) {
   console.log(i + ': ' + output.getPortName(i));
 }
 
-var deviceNumber = 2;
+// Set the appropriate device number here
+var deviceNumber = 0;
 output.openPort(deviceNumber);
+
 console.log('Opened ' + output.getPortName(deviceNumber) +  '. Waiting for input.');
 
 const input = readline.createInterface({
@@ -31,20 +33,13 @@ input.on('line', (input) =>{
 
   // Parse the input into a set of notes
   // 144 is channel 1 out
-  // Tweak the max out and in values to map the usable range of the parameters
-  // var byte1 = Math.round(scale(input.substr(1, 2), 0, 100, 40, 80));
-  // var byte2 = Math.round(scale(input.substr(3, 2), 0, 100, 40, 80));
-  // var byte3 = Math.round(scale(input.substr(5, 2), 0, 100, 0, 127));
-  // var byte4 = Math.round(scale(input.substr(7, 2), 0, 100, 0, 127));
-  // var byte5 = Math.round(scale(input.substr(9, 2), 0, 100, 0, 127));
+  // Map from C2 - C6
+  notes[0] = Math.round(scale(input.substr(0, 2), 0, 100, 36, 84));
+  notes[1] = Math.round(scale(input.substr(2, 2), 0, 100, 36, 84));
+  notes[2] = Math.round(scale(input.substr(4, 2), 0, 100, 36, 84));
+  notes[3] = Math.round(scale(input.substr(6, 2), 0, 100, 36, 84));
 
-  // Send the MIDI data
-  // console.log('Parsed MIDI values: ' + byte1 + ' ' + byte2 + ' ' + byte3 + ' ' + byte4);
-
-  // output.sendMessage([144, byte1, byte3]);
-
-  // Turn the note off after half a second.
-  // setTimeout(notesOff, 250, byte1, byte2);
+  console.log('1:' + notes[0] + ' 2:' + notes[1] + ' 3:' + notes[2] + ' 4:' + notes[3]);
 });
 
 const start = async () => {
@@ -61,8 +56,7 @@ const start = async () => {
 
     // Play note stored at the position in the array
     output.sendMessage([midiEvent, notes[currentStep], num]);
-
-    console.log(num);
+    // console.log(num);
   });
 }
 
