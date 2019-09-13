@@ -14,7 +14,7 @@ for (var i = 0; i < portCount; i++) {
 }
 
 // Set the appropriate device number here
-var deviceNumber = 1;
+var deviceNumber = 2;
 output.openPort(deviceNumber);
 
 console.log('Opened ' + output.getPortName(deviceNumber) +  '. Waiting for input.');
@@ -54,7 +54,7 @@ const start = async (seq) => {
       console.log('Playing step ' + step + ': ' + note);
 
       output.sendMessage([midiEvent, note, 127]);
-      setTimeout(noteOff, 5, note); // 5 millisecond delay? Not sure if this is acceptable.
+      setTimeout(noteOff, 10, note); // 5 millisecond delay? Not sure if this is acceptable.
     }
   });
 }
