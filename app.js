@@ -1,8 +1,12 @@
 const midi = require('midi');
 const readline = require('readline');
 
+/* Configuration values */
 var outputMidiDeviceNumber = 0;
 var inputMidiDeviceNumber = 1;
+var probabilityLowerBound = 75;   // Lowest note probability for a sequence. 100 means notes always play.
+var maxMidiChannels = 2;          // Max number of MIDI channels to randomly play on. 1 means just channel 1.
+//* end configuration */
 
 const midiOutput = new midi.Output();
 const midiInput = new midi.Input();
@@ -10,7 +14,6 @@ const waitFor = (ms) => new Promise(r => setTimeout(r, ms));
 var stepDelay = 1000;
 var isPlaying = false;
 var lastClockPulse = new Date();
-const midiEvent = 144;
 
 console.log("Available MIDI output devices:");
 enumerateMidiDevices(midiOutput);
@@ -65,7 +68,15 @@ consoleInput.on('line', (input) =>{
   // Parse the input into a set of notes
   // 144 is channel 1 out
   // Map from C2 - C6
-  var seq = initSequence();
+  var seq = {};
+  seq.notes = [];
+  seq.step = 0;
+
+  // Set the note probability value between 50 and 100
+  seq.probability = getRandom(probabilityLowerBound, 100);
+
+  // Create a sequence between 3 and 6 steps long, fill it up with mapped midi data from the scan
+  seq.length = getRandom(3, 7);
 
   // Fill the sequence with notes mapped from the input string
   for (var x = 0; x < seq.length; x++) {
@@ -79,15 +90,21 @@ const start = async (seq) => {
   console.log('Starting sequence:');
   console.log(seq);
 
-  await asyncLoop(seq, async (note, step) => {
+  await asyncLoop(seq, async (note, step, probability) => {
     await waitFor(stepDelay);
 
     if (note && isPlaying) {
-      // Play note stored at the position in the array
-      console.log('Playing step ' + step + ': ' + note);
+      var chance = getRandom(0, 100);
+      if (chance < probability) {
+        // Play note stored at the position in the array
+        console.log('Playing step ' + step + ': ' + note);
 
-      midiOutput.sendMessage([midiEvent, note, 127]);
-      // setTimeout(noteOff, 10, note); // 5 millisecond delay? Not sure if this is acceptable.
+        // Pick a random channel to send the MIDI message to
+        midiEvent = 144 + getRandom(0, maxMidiChannels - 1);
+
+        midiOutput.sendMessage([midiEvent, note, 127]);
+        // setTimeout(noteOff, 10, note); // 5 millisecond delay? Not sure if this is acceptable.
+      }
     }
   });
 }
@@ -104,17 +121,6 @@ function noteOff(note) {
   midiOutput.sendMessage([128, note, 0]);
 }
 
-function initSequence() {
-  var seq = {};
-  seq.notes = [];
-  seq.step = 0;
-  seq.probability = 100;
-
-  // Create a sequence between 3 and 6 steps long, fill it up with mapped midi data from the scan
-  seq.length = getRandom(3, 7);
-
-  return seq;
-}
 // output.sendMessage([176,22,1]);
 // output.closePort();
 
@@ -131,7 +137,7 @@ const scale = (num, in_min, in_max, out_min, out_max) => {
 
 async function asyncLoop(seq, callback) {
   do {
-    await callback(seq.notes[seq.step], seq.step);
+    await callback(seq.notes[seq.step], seq.step, seq.probability);
     seq.step += 1;
     if (seq.step == seq.length) {
       seq.step = 0;
